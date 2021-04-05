@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 
 
 BASE_IMAGE_SIZE = 256
-MAX_LINE_LENGTH = math.sqrt(BASE_IMAGE_SIZE)
+MAX_LINE_LENGTH = 5.0
 POPULATION_SIZE = 8
-GENES_SIZE = 300
-MUTATION_CHANCE = 0.1
+GENES_SIZE = 800
+MUTATION_CHANCE = 0.05
 CHANGE_VISABILITY_CHANCE = 0.001
 
 goal_image = cv2.resize(cv2.imread('goal_image.png'), (BASE_IMAGE_SIZE, BASE_IMAGE_SIZE))
@@ -99,16 +99,6 @@ def mutation(population):
         if random.uniform(0.0, 1.0) <= CHANGE_VISABILITY_CHANCE:
             new_gene = (gene[0], gene[1], gene[2], gene[3], not gene[4])
         elif random.uniform(0.0, 1.0) <= MUTATION_CHANCE:
-
-            # for i in range(2):
-            #     if random.uniform(0.0, 1.0) <= MUTATION_CHANCE:
-            #         x = math.ceil(gene[i][0] + (1 if random.random() < 0.5 else -1) * np.random.exponential(math.sqrt(MAX_LINE_LENGTH)))
-            #         y = math.ceil(gene[i][1] + (1 if random.random() < 0.5 else -1) * np.random.exponential(math.sqrt(MAX_LINE_LENGTH)))
-            #         new_gene.append((x, y))
-            #     else:
-            #         new_gene.append(gene[i])
-            # new_gene.append(gene[2])
-
             x = gene[0][0] + (1 if random.random() < 0.5 else -1)
             y = gene[0][1] + (1 if random.random() < 0.5 else -1)
 
@@ -134,7 +124,7 @@ def mutation(population):
 # TODO: In mutation function, add a very low probability of removing a gene DONE
 # TODO: Make the line length to be exponentially/geomtrically distributed DONE
 # TODO: Make the crossover point be randomly chosen DONE
-# TODO: Change gene's parameters to p1, p2, angle, length
+# TODO: Change gene's parameters to p1, p2, angle, length, visibility DONE
 
 def main():
     cv2.imwrite("edges_image.png", edges_image)
@@ -143,16 +133,20 @@ def main():
     best_score = 0
     iteration = 0
     while best_score < 0.97:
-        iteration += 1
 
         population = sorted(population, key=lambda item: item[1], reverse=True)[:POPULATION_SIZE]
         assert len(population) == POPULATION_SIZE
 
         best_score = population[0][1]
         best_chromosome = population[0][0]
+
         image = produce_image(best_chromosome)
-        print("Iteration", iteration, "| Best SSIM:", best_score * 100, "%")
         cv2.imwrite("out_image.png", image)
+        print("Iteration", iteration, "| Best SSIM:", best_score * 100, "%")
+
+        if iteration % 500 == 0:
+            cv2.imwrite(f"{iteration}_{math.ceil(best_score*100)}.png", image)
+        iteration += 1
 
         population = mating(population)
         population = mutation(population)
