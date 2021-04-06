@@ -5,8 +5,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-BASE_IMAGE_SIZE = 256
-MAX_LINE_LENGTH = 5.0
+BASE_IMAGE_SIZE = 512
+INNER_IMAGE_SIZE = 16
+MAX_LINE_LENGTH = 15.0
+MAX_LINE_THICKNESS = max(1, BASE_IMAGE_SIZE // 256)
 POPULATION_SIZE = 8
 GENES_SIZE = 800
 MUTATION_CHANCE = 0.05
@@ -32,8 +34,8 @@ def draw_images(*images):
 def produce_image(chromosome):
     image = np.zeros((BASE_IMAGE_SIZE, BASE_IMAGE_SIZE, 3), np.uint8)
     for gene in chromosome:
-        if not gene[4]:
-            cv2.line(image, *gene[:2], (255, 255, 255), thickness=1)
+        if not gene[5]:
+            cv2.line(image, *gene[:2], (255, 255, 255), thickness=gene[4])
     return image
 
 
@@ -46,13 +48,14 @@ def generate_random_gene():
         
         angle = random.uniform(0.0, 1.0) * 2 * math.pi
         length = np.random.exponential(MAX_LINE_LENGTH)
+        thickness = random.randint(1, MAX_LINE_THICKNESS)
 
         x_offset = math.floor(math.cos(angle) * length)
         y_offset = math.floor(math.sin(angle) * length)
 
         p2 = (p1[0] + x_offset, p1[1] + y_offset)
 
-        return (p1, p2, angle, length, False)
+        return (p1, p2, angle, length, thickness, False)
 
 
 def generate_random_chromosome():
@@ -97,19 +100,19 @@ def mutation(population):
     def mutate(gene):
         new_gene = copy.copy(gene)
         if random.uniform(0.0, 1.0) <= CHANGE_VISABILITY_CHANCE:
-            new_gene = (gene[0], gene[1], gene[2], gene[3], not gene[4])
+            new_gene = (*gene[:5], not gene[5])
         elif random.uniform(0.0, 1.0) <= MUTATION_CHANCE:
             x = gene[0][0] + (1 if random.random() < 0.5 else -1)
             y = gene[0][1] + (1 if random.random() < 0.5 else -1)
 
             angle = random.uniform(0.0, 1.0) * 2 * math.pi
             length = gene[3] + (1 if random.random() < 0.5 else -1) * np.random.exponential(5.0)
+            thickness = random.randint(1, MAX_LINE_THICKNESS)
 
             x_offset = math.floor(math.cos(angle) * length)
             y_offset = math.floor(math.sin(angle) * length)
 
-            new_gene = ((x, y), (x + x_offset, y + y_offset), angle, length, gene[4])
-
+            new_gene = ((x, y), (x + x_offset, y + y_offset), angle, length, thickness, gene[5])
         return tuple(new_gene)
 
     for chromosome in population:
