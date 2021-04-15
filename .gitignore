@@ -1,4 +1,10 @@
 *.png
+*.jpg
+*.gif
+
 nhl_logos
 iterations
+
 main.py
+idea.py
+test.py
